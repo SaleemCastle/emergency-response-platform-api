@@ -6,6 +6,7 @@ const morgan = require("morgan");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
 const { clerkMiddleware } = require("@clerk/express");
+const path = require('path');
 
 const userRoutes = require("./routes/userRoutes");
 const emergencyRoutes = require("./routes/emergencyRoutes");
@@ -29,6 +30,9 @@ app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 app.use("/api/users", userRoutes);

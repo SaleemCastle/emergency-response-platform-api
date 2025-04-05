@@ -8,11 +8,12 @@ datasource db {
 }
 
 model User {
-  id       String  @id @default(uuid())
-  email    String  @unique
-  name     String?
-  createdAt DateTime @default(now())
-  emergencies Emergency[]
+  id            String  @id @default(uuid())
+  email         String  @unique
+  name          String?
+  createdAt     DateTime @default(now())
+  emergencies   Emergency[]
+  pushToken     String?
 }
 
 model Emergency {
@@ -22,7 +23,8 @@ model Emergency {
   type        String
   location    String
   description String
-  photoUrl    String?
+  mediaUrl    String?
+  severity    Int      @default(1)
   status      String   @default("pending")
   hits        Int      @default(0)
   timestamp   DateTime @default(now())

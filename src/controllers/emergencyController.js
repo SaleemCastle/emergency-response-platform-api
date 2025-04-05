@@ -1,6 +1,7 @@
 const prisma = require('../lib/prisma');
 const SocketService = require('../services/socketService');
 const { classifyEmergency } = require('../aiService');
+const { sendPushNotifications } = require('../services/pushNotification');
 
 const emergencyController = {
   // Get all emergencies
@@ -39,10 +40,17 @@ const emergencyController = {
   // Create new emergency
   async createEmergency(req, res) {
     try {
-      const { userId, location, description, photoUrl } = req.body;
+      const { userId, location, description, expoPushToken } = req.body;
+
+      console.log('Expo Push Token:', expoPushToken);
       
-      // Get AI classification
-      const type = await classifyEmergency(description);
+      // Get media URL if file was uploaded
+      const mediaUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+      // Get AI classification with media analysis
+    //   const { type, severity } = await classifyEmergency(description, mediaUrl);
+      const { type, severity } = { type: 'test', severity: 1 };
+      console.log('AI Classification:', { type, severity });
 
       const emergency = await prisma.emergency.create({
         data: {
@@ -50,22 +58,52 @@ const emergencyController = {
           type,
           location,
           description,
-          photoUrl
+          mediaUrl,
+          severity,
+          hits: 0
         },
         include: {
           user: true
         }
       });
 
-      // Use the global io instance
+      // Get all user push tokens except the reporter's
+      const users = await prisma.user.findMany({
+        where: {
+          pushToken: {
+            not: null,
+          },
+          id: {
+            not: userId
+          }
+        },
+        select: {
+          pushToken: true
+        }
+      });
+
+      const pushTokens = users.map(user => user.pushToken);
+
+      // Send notifications asynchronously - don't await
+      sendPushNotifications(pushTokens, emergency)
+        .catch(error => console.error('Failed to send notifications:', error));
+
+      // Emit socket event if available
       if (global.io) {
         const socketService = new SocketService(global.io);
-        socketService.emitNewEmergency(emergency);
+        socketService.emitNewEmergency({
+          ...emergency,
+          severity
+        });
       }
 
       res.status(201).json({
         ...emergency,
-        aiClassified: true
+        aiClassified: true,
+        aiAnalysis: {
+          type,
+          severity
+        }
       });
     } catch (error) {
       console.error('Error in createEmergency:', error);

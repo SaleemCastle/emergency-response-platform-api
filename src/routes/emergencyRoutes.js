@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const emergencyController = require('../controllers/emergencyController');
+const upload = require('../config/multer');
 
 // GET all emergencies
 router.get('/', emergencyController.getAllEmergencies);
@@ -11,8 +12,8 @@ router.get('/:id', emergencyController.getEmergencyById);
 // GET emergencies by user ID
 router.get('/user/:userId', emergencyController.getUserEmergencies);
 
-// POST new emergency
-router.post('/', emergencyController.createEmergency);
+// POST new emergency with media upload
+router.post('/', upload.single('media'), emergencyController.createEmergency);
 
 // PUT update emergency
 router.put('/:id', emergencyController.updateEmergency);
