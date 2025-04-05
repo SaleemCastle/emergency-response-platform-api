@@ -18,4 +18,10 @@ router.put('/:id', userController.updateUser);
 // DELETE user
 router.delete('/:id', userController.deleteUser);
 
+// Get user ID by email
+router.get('/user/email/:email', userController.getUserIdByEmail);
+
+// Store user push token
+router.post('/user/push-token', userController.storePushToken);
+
 module.exports = router; 

@@ -14,8 +14,8 @@ class SocketService {
     try {
       // Emit to all clients
       this.io.emit('newEmergency', {
-        event: 'NEW_EMERGENCY',
-        data: emergency
+        ...emergency,
+        severityLabel: this.getSeverityLabel(emergency.severity)
       });
 
       // Emit to type-specific channel
@@ -34,6 +34,16 @@ class SocketService {
       );
     } catch (error) {
       console.error('Error emitting socket event:', error);
+    }
+  }
+
+  getSeverityLabel(severity) {
+    switch(severity) {
+      case 0: return 'Very Low';
+      case 1: return 'Low';
+      case 2: return 'Medium';
+      case 3: return 'High';
+      default: return 'Unknown';
     }
   }
 
